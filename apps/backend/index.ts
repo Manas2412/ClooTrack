@@ -9,6 +9,17 @@ const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   : null;
 
+/**
+ * LLM classification prompt (reviewable in codebase).
+ * Asks the model to return exactly two words: category then priority.
+ * Valid categories: billing, technical, account, general
+ * Valid priorities: low, medium, high, critical
+ */
+const CLASSIFY_SYSTEM_PROMPT = `You classify support ticket descriptions. Reply with exactly two words on one line, separated by a space: first the category, then the priority.
+Categories (exactly one): billing, technical, account, general
+Priorities (exactly one): low, medium, high, critical
+Example: technical high`;
+
 // --- Helpers: validate enums and build filter ---
 const CATEGORIES = Object.values(Category) as readonly Category[];
 const PRIORITIES = Object.values(Priority) as readonly Priority[];
@@ -23,7 +34,10 @@ function parseOptionalEnum<T extends string>(
   return allowed.includes(s as T) ? (s as T) : undefined;
 }
 
-// --- POST /api/tickets/classify/ --- Must be before /api/tickets/:id so "classify" is not treated as id
+// --- POST /api/tickets/classify/ ---
+// Frontend calls this as the user types (or on blur/submit), then pre-fills category/priority
+// dropdowns; user can accept or override before submitting. If LLM fails, we fall back to
+// keyword-based suggestions so the flow never blocks ticket submission.
 app.post("/api/tickets/classify/", async (req, res) => {
   const description = req.body?.description;
   if (typeof description !== "string" || !description.trim()) {
@@ -35,53 +49,47 @@ app.post("/api/tickets/classify/", async (req, res) => {
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
-          {
-            role: "system",
-            content: `You classify support ticket descriptions. Reply with exactly two words on one line, separated by a space: first the category, then the priority.
-Categories (exactly one): billing, technical, account, general
-Priorities (exactly one): low, medium, high, critical
-Example: technical high`,
-          },
-          {
-            role: "user",
-            content: description,
-          },
+          { role: "system", content: CLASSIFY_SYSTEM_PROMPT },
+          { role: "user", content: description },
         ],
         max_tokens: 20,
       });
       const text =
         completion.choices[0]?.message?.content?.trim().toLowerCase() ?? "";
       const [rawCategory, rawPriority] = text.split(/\s+/);
-      const category = CATEGORIES.includes(rawCategory as Category)
+      const suggested_category = CATEGORIES.includes(rawCategory as Category)
         ? rawCategory
         : "general";
-      const priority = PRIORITIES.includes(rawPriority as Priority)
+      const suggested_priority = PRIORITIES.includes(rawPriority as Priority)
         ? rawPriority
         : "medium";
-      return res.json({ category, priority });
+      return res.json({ suggested_category, suggested_priority });
     } catch (err) {
-      console.error("LLM classify error:", err);
-      return res.status(502).json({ error: "Classification service unavailable" });
+      // LLM unreachable or error: fall back to keyword-based suggestion so the frontend
+      // still gets suggestions and ticket submission is never blocked.
+      console.warn("LLM classify failed, using fallback:", err);
     }
   }
 
-  // Fallback when no API key: simple keyword-based suggestion
+  // No API key or LLM failure: keyword-based fallback (ticket submission always works).
   const lower = description.toLowerCase();
-  let category: Category = "general";
+  let suggested_category: Category = "general";
   if (/\b(bill|payment|charge|invoice|subscription|refund)\b/.test(lower))
-    category = "billing";
+    suggested_category = "billing";
   else if (/\b(login|password|account|email|access|sign)\b/.test(lower))
-    category = "account";
+    suggested_category = "account";
   else if (/\b(error|bug|crash|slow|broken|feature|api|integration)\b/.test(lower))
-    category = "technical";
+    suggested_category = "technical";
 
-  let priority: Priority = "medium";
+  let suggested_priority: Priority = "medium";
   if (/\b(urgent|critical|down|outage|immediately|asap)\b/.test(lower))
-    priority = "critical";
-  else if (/\b(important|asap|soon|blocked)\b/.test(lower)) priority = "high";
-  else if (/\b(minor|whenever|suggestion)\b/.test(lower)) priority = "low";
+    suggested_priority = "critical";
+  else if (/\b(important|asap|soon|blocked)\b/.test(lower))
+    suggested_priority = "high";
+  else if (/\b(minor|whenever|suggestion)\b/.test(lower))
+    suggested_priority = "low";
 
-  return res.json({ category, priority });
+  return res.json({ suggested_category, suggested_priority });
 });
 
 // --- POST /api/tickets/ ---

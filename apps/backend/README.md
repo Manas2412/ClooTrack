@@ -8,10 +8,10 @@ From the repo root (or with `DATABASE_URL` and optional `OPENAI_API_KEY` set):
 bun install
 ```
 
-Set environment variables (e.g. in `.env` in `packages/db` or when running):
+Set environment variables (e.g. in `.env` or in `docker-compose.yml`):
 
 - **`DATABASE_URL`** — PostgreSQL connection string (required for DB). Prisma config reads this from `packages/db` (see `packages/db/prisma.config.ts`).
-- **`OPENAI_API_KEY`** — Optional. If set, `POST /api/tickets/classify/` uses OpenAI to suggest category and priority; otherwise a keyword-based fallback is used.
+- **`OPENAI_API_KEY`** — Optional. If set, `POST /api/tickets/classify/` uses the LLM to suggest category and priority; configurable via env in `docker-compose.yml`. If unset or if the LLM fails, a keyword-based fallback is used and ticket submission still works.
 - **`PORT`** — Server port (default: 3000).
 
 Apply migrations (from repo root or `packages/db`):
@@ -35,7 +35,7 @@ bun run apps/backend/index.ts
 | **GET** | `/api/tickets/` | List tickets (newest first). Query: `?category=`, `?priority=`, `?status=`, `?search=` (title + description). |
 | **PATCH** | `/api/tickets/:id` | Update a ticket (e.g. status, category, priority). |
 | **GET** | `/api/tickets/stats/` | Aggregated stats (total, open, avg per day, priority/category breakdown). |
-| **POST** | `/api/tickets/classify/` | Body: `{ "description": "..." }`. Returns LLM-suggested `{ "category", "priority" }`. |
+| **POST** | `/api/tickets/classify/` | Body: `{ "description": "..." }`. Returns `{ "suggested_category", "suggested_priority" }`. Call as user types or on blur; user can accept or override before submit. LLM failures fall back to keyword-based suggestions so submission is never blocked. |
 
 **Enums:** `category`: billing | technical | account | general. `priority`: low | medium | high | critical. `status`: open | in_progress | resolved | closed (default: open).
 
@@ -52,3 +52,5 @@ bun run apps/backend/index.ts
 ```
 
 Stats use database-level aggregation (Prisma `count`, `groupBy`, `aggregate`), not application-level loops.
+
+**LLM / classify:** The prompt used for category/priority suggestion is in the codebase as `CLASSIFY_SYSTEM_PROMPT` in `apps/backend/index.ts`. The API key is configurable via `OPENAI_API_KEY` in `docker-compose.yml` (or `.env`).

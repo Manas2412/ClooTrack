@@ -1,0 +1,32 @@
+# Support Ticket System — API key for LLM classification is configurable here.
+# Set OPENAI_API_KEY to enable auto-suggestions; leave empty/unset to use keyword fallback.
+# Ticket submission always works with or without the LLM.
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      # Set your LLM API key for auto-suggest category/priority. Optional.
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+    env_file:
+      - .env
+    # Uncomment and add a postgres service if you run DB in Docker:
+    # depends_on:
+    #   - postgres
+  # postgres:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_USER: app
+  #     POSTGRES_PASSWORD: app
+  #     POSTGRES_DB: clootrack
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+# volumes:
+#   pgdata:
