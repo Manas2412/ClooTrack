@@ -1,0 +1,40 @@
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Ticket {
+  id          String   @unique @default(uuid())
+  title       String
+  description String
+  category    Category
+  priority    Priority
+  status      String
+  created_at  DateTime @default(now())
+}
+
+enum Category {
+  Billing
+  Technical
+  Account
+  General
+}
+
+enum Priority {
+  Low
+  Medium
+  High
+  Critical
+}
+
+enum Status {
+  Open
+  In_Progress
+  Resolved
+  Closed
+}
