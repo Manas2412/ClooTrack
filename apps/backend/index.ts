@@ -11,13 +11,28 @@ const openai = process.env.OPENAI_API_KEY
 
 /**
  * LLM classification prompt (reviewable in codebase).
- * Asks the model to return exactly two words: category then priority.
- * Valid categories: billing, technical, account, general
- * Valid priorities: low, medium, high, critical
+ * Output format: exactly one line with two words, "category priority".
+ * - Categories: billing (payments, invoices, refunds), technical (bugs, errors, API, features),
+ *   account (login, password, access), general (everything else).
+ * - Priorities: critical (outage, urgent, down), high (blocked, important), medium (default),
+ *   low (minor, suggestion, when possible).
  */
-const CLASSIFY_SYSTEM_PROMPT = `You classify support ticket descriptions. Reply with exactly two words on one line, separated by a space: first the category, then the priority.
-Categories (exactly one): billing, technical, account, general
-Priorities (exactly one): low, medium, high, critical
+const CLASSIFY_SYSTEM_PROMPT = `You classify support ticket descriptions into one category and one priority.
+
+Reply with exactly two words on a single line, separated by one space: first the category, then the priority. No other text.
+
+Categories (use exactly one):
+- billing: payments, invoices, refunds, subscription, charges
+- technical: bugs, errors, crashes, API issues, features, integration
+- account: login, password, email, access, sign-in, account settings
+- general: anything that doesn't fit above
+
+Priorities (use exactly one):
+- critical: outage, system down, urgent, asap, cannot work
+- high: blocked, important, need soon
+- medium: normal request
+- low: minor, suggestion, when possible, no rush
+
 Example: technical high`;
 
 // --- Helpers: validate enums and build filter ---
@@ -56,17 +71,23 @@ app.post("/api/tickets/classify/", async (req, res) => {
       });
       const text =
         completion.choices[0]?.message?.content?.trim().toLowerCase() ?? "";
-      const [rawCategory, rawPriority] = text.split(/\s+/);
-      const suggested_category = CATEGORIES.includes(rawCategory as Category)
-        ? rawCategory
-        : "general";
-      const suggested_priority = PRIORITIES.includes(rawPriority as Priority)
-        ? rawPriority
-        : "medium";
-      return res.json({ suggested_category, suggested_priority });
+      const parts = text.split(/\s+/).filter(Boolean);
+      const rawCategory = parts[0];
+      const rawPriority = parts[1];
+      const validCategory =
+        rawCategory && CATEGORIES.includes(rawCategory as Category);
+      const validPriority =
+        rawPriority && PRIORITIES.includes(rawPriority as Priority);
+      if (validCategory && validPriority) {
+        return res.json({
+          suggested_category: rawCategory,
+          suggested_priority: rawPriority,
+        });
+      }
+      // Garbage or malformed response: use fallback so we never return invalid suggestions
+      console.warn("LLM returned invalid format, using fallback:", text);
     } catch (err) {
-      // LLM unreachable or error: fall back to keyword-based suggestion so the frontend
-      // still gets suggestions and ticket submission is never blocked.
+      // LLM unreachable or error: fall back so ticket submission is never blocked
       console.warn("LLM classify failed, using fallback:", err);
     }
   }
