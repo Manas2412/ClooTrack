@@ -5,19 +5,10 @@ import OpenAI from "openai";
 const app = express();
 app.use(express.json());
 
-// API key from env only — never hardcode
 const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   : null;
 
-/**
- * LLM classification prompt (reviewable in codebase).
- * Output format: exactly one line with two words, "category priority".
- * - Categories: billing (payments, invoices, refunds), technical (bugs, errors, API, features),
- *   account (login, password, access), general (everything else).
- * - Priorities: critical (outage, urgent, down), high (blocked, important), medium (default),
- *   low (minor, suggestion, when possible).
- */
 const CLASSIFY_SYSTEM_PROMPT = `You classify support ticket descriptions into one category and one priority.
 
 Reply with exactly two words on a single line, separated by one space: first the category, then the priority. No other text.
@@ -36,7 +27,6 @@ Priorities (use exactly one):
 
 Example: technical high`;
 
-// --- Helpers: validate enums and build filter ---
 const CATEGORIES = Object.values(Category) as readonly Category[];
 const PRIORITIES = Object.values(Priority) as readonly Priority[];
 const STATUSES = Object.values(Status) as readonly Status[];
@@ -50,10 +40,6 @@ function parseOptionalEnum<T extends string>(
   return allowed.includes(s as T) ? (s as T) : undefined;
 }
 
-// --- POST /api/tickets/classify/ ---
-// Frontend calls this as the user types (or on blur/submit), then pre-fills category/priority
-// dropdowns; user can accept or override before submitting. If LLM fails, we fall back to
-// keyword-based suggestions so the flow never blocks ticket submission.
 app.post("/api/tickets/classify/", async (req, res) => {
   const description = req.body?.description;
   if (typeof description !== "string" || !description.trim()) {
@@ -85,15 +71,12 @@ app.post("/api/tickets/classify/", async (req, res) => {
           suggested_priority: rawPriority,
         });
       }
-      // Garbage or malformed response: use fallback so we never return invalid suggestions
       console.warn("LLM returned invalid format, using fallback:", text);
     } catch (err) {
-      // LLM unreachable or error: fall back so ticket submission is never blocked
       console.warn("LLM classify failed, using fallback:", err);
     }
   }
 
-  // No API key or LLM failure: keyword-based fallback (ticket submission always works).
   const lower = description.toLowerCase();
   let suggested_category: Category = "general";
   if (/\b(bill|payment|charge|invoice|subscription|refund)\b/.test(lower))
@@ -114,7 +97,6 @@ app.post("/api/tickets/classify/", async (req, res) => {
   return res.json({ suggested_category, suggested_priority });
 });
 
-// --- POST /api/tickets/ ---
 app.post("/api/tickets/", async (req, res) => {
   const { title, description, category, priority } = req.body ?? {};
   if (typeof title !== "string" || !title.trim()) {
@@ -147,7 +129,6 @@ app.post("/api/tickets/", async (req, res) => {
   }
 });
 
-// --- GET /api/tickets/ ---
 app.get("/api/tickets/", async (req, res) => {
   const category = parseOptionalEnum(req.query.category as string, CATEGORIES);
   const priority = parseOptionalEnum(req.query.priority as string, PRIORITIES);
@@ -177,7 +158,6 @@ app.get("/api/tickets/", async (req, res) => {
   }
 });
 
-// --- GET /api/tickets/stats/ --- (DB-level aggregation only; must be before :id)
 app.get(["/api/tickets/stats", "/api/tickets/stats/"], async (_req, res) => {
   try {
     const [totalResult, openResult, byPriority, byCategory, dateRange] =
@@ -239,7 +219,6 @@ app.get(["/api/tickets/stats", "/api/tickets/stats/"], async (_req, res) => {
   }
 });
 
-// --- PATCH /api/tickets/:id ---
 app.patch("/api/tickets/:id", async (req, res) => {
   const id = req.params.id;
   if (!id) return res.status(400).json({ error: "Ticket id required" });
@@ -285,7 +264,6 @@ app.patch("/api/tickets/:id", async (req, res) => {
   }
 });
 
-// --- GET /api/tickets/:id (optional, for single ticket view) ---
 app.get("/api/tickets/:id", async (req, res) => {
   const id = req.params.id;
   if (!id) return res.status(400).json({ error: "Ticket id required" });

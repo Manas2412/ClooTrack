@@ -1,8 +1,6 @@
-# Build from repo root: docker build -f apps/web/Dockerfile .
 FROM oven/bun:1-alpine AS base
 WORKDIR /app
 
-# Copy full monorepo for workspace resolution
 COPY package.json bun.lock* turbo.json ./
 COPY apps/web ./apps/web
 COPY packages/db ./packages/db

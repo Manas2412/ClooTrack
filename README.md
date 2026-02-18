@@ -1,153 +1,233 @@
-# Support Ticket System (Turborepo)
+🎫 Support Ticket System
 
-## Docker — run the full app
+A modern, AI-assisted support ticket platform.
+Built for speed. Designed for resilience. Ready to ship.
 
-From the repo root:
+Spin up the entire stack — database, backend, and frontend — with one command.
 
-```bash
+⚡ Run It
 docker-compose up --build
-```
 
-- **PostgreSQL** runs on port 5432; **backend** on 3000; **frontend** on 3001.
-- Open **http://localhost:3001** in your browser. The app is fully functional (submit tickets, list, filter, search, stats, change status).
-- **LLM suggestions**: Set `OPENAI_API_KEY` in a `.env` file (or `export OPENAI_API_KEY=sk-...`) before running. Optional: copy `.env.example` to `.env` and add your key. Without it, category/priority use a keyword fallback.
 
-The backend runs database migrations automatically on startup. Service order: postgres → backend (after DB healthy) → frontend.
+Open:
 
----
+🌐 App → http://localhost:3001
 
-# Turborepo starter
+🔧 API → http://localhost:3000
 
-This Turborepo starter is maintained by the Turborepo core team.
+Port 3001 busy?
 
-## Using this example
+FRONTEND_PORT=3002 docker-compose up --build
 
-Run the following command:
 
-```sh
-npx create-turbo@latest
-```
+Then open:
 
-## What's inside?
+http://localhost:3002
 
-This Turborepo includes the following packages/apps:
 
-### Apps and Packages
+No local Postgres.
+No manual migrations.
+No extra setup.
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+🧠 AI-Powered (Optional)
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+This system supports automatic ticket classification using OpenAI.
 
-### Utilities
+Create a .env file in the root:
 
-This Turborepo has some additional tools already setup for you:
+OPENAI_API_KEY=sk-your-key
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
 
-### Build
+If the key is missing?
+No problem.
 
-To build all apps and packages, run the following command:
+The system automatically falls back to a keyword-based classifier.
+Ticket creation never breaks.
 
-```
-cd my-turborepo
+🤖 LLM Choice
 
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
+Model: gpt-4o-mini
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
+Why this model?
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+⚡ Fast inference for short prompts
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+💰 Cost-efficient for classification
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+🎯 Reliable structured output
 
-### Develop
+🔁 Easy validation + safe fallback
 
-To develop all apps and packages, run the following command:
+The model returns exactly:
 
-```
-cd my-turborepo
+<category> <priority>
 
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+Example:
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+technical high
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+Allowed categories:
 
-### Remote Caching
+billing
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+technical
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+account
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+general
 
-```
-cd my-turborepo
+Allowed priorities:
 
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
+low
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
+medium
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+high
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+critical
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
+If the response is invalid → fallback kicks in automatically.
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
+Resilience > novelty.
 
-## Useful Links
+🏗 Architecture
 
-Learn more about the power of Turborepo:
+Built as a Turbo monorepo:
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+apps/
+  backend/
+  frontend/
+
+packages/
+  db/
+  ui/
+
+Why this structure?
+
+Single clone
+
+Single command to run
+
+Shared database layer
+
+Clean separation of concerns
+
+Easy scaling later
+
+🐘 Database
+
+PostgreSQL runs entirely in Docker
+
+DATABASE_URL is injected via compose
+
+Backend runs prisma migrate deploy on startup
+
+Zero manual migration steps.
+
+⚡ Runtime: Bun
+
+Both backend and frontend use Bun inside Docker.
+
+Why?
+
+Faster installs
+
+Faster builds
+
+Works cleanly with Prisma + Next.js
+
+Leaner containers
+
+🎨 Frontend
+
+Built with Next.js.
+
+Includes:
+
+📝 Ticket creation form (debounced classification)
+
+📋 Ticket list
+
+🔍 Filters + search
+
+📊 Stats dashboard
+
+The frontend talks to the backend via:
+
+NEXT_PUBLIC_API_URL=http://localhost:3000
+
+
+Configured at build time for clean host access.
+
+🌐 API Design
+
+Simple REST API:
+
+POST /tickets
+
+GET /tickets
+
+PATCH /tickets/:id
+
+GET /stats
+
+Stats are computed using Prisma:
+
+count
+
+groupBy
+
+aggregate
+
+No in-memory aggregation loops.
+Database does the heavy lifting.
+
+🛡 Built for Failure
+
+This system is designed to fail safely:
+
+LLM down? → fallback works
+
+Invalid AI output? → rejected + fallback
+
+Fresh environment? → migrations auto-run
+
+No local DB? → Docker handles it
+
+The user flow never blocks.
+
+🧩 Tech Stack
+
+Next.js (Frontend)
+
+Express (Backend)
+
+PostgreSQL
+
+Prisma
+
+Bun
+
+Docker + Docker Compose
+
+OpenAI (gpt-4o-mini)
+
+🎯 Philosophy
+
+This isn’t just a CRUD app.
+
+It demonstrates:
+
+Clean monorepo architecture
+
+Production-safe migrations
+
+AI integration with guardrails
+
+Fail-safe design
+
+Single-command reproducibility
+
+If you can run it with one command, you can ship it.

@@ -40,7 +40,6 @@
   }
 }
 
-/* Stats */
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -82,7 +81,6 @@
   }
 }
 
-/* Form */
 .form {
   display: flex;
   flex-direction: column;
@@ -188,7 +186,6 @@ textarea.input {
   }
 }
 
-/* Filters & list */
 .filters {
   display: flex;
   flex-wrap: wrap;

@@ -1,13 +1,9 @@
--- CreateEnum
 CREATE TYPE "Category" AS ENUM ('billing', 'technical', 'account', 'general');
 
--- CreateEnum
 CREATE TYPE "Priority" AS ENUM ('low', 'medium', 'high', 'critical');
 
--- CreateEnum
 CREATE TYPE "Status" AS ENUM ('open', 'in_progress', 'resolved', 'closed');
 
--- CreateTable
 CREATE TABLE "Ticket" (
     "id" TEXT NOT NULL,
     "title" VARCHAR(200) NOT NULL,

@@ -98,7 +98,6 @@ export default function Home() {
     fetchStats();
   }, [fetchStats]);
 
-  // Debounced classify when description changes
   useEffect(() => {
     const trimmed = description.trim();
     if (!trimmed) return;
@@ -179,7 +178,6 @@ export default function Home() {
       setTickets(updated);
       await fetchStats();
     } catch {
-      // keep previous state
     } finally {
       setSavingStatus(false);
     }
@@ -197,7 +195,6 @@ export default function Home() {
       </header>
 
       <main className={styles.main}>
-        {/* Stats Dashboard */}
         <section className={styles.section}>
           <h2>Stats</h2>
           {statsLoading ? (
@@ -242,7 +239,6 @@ export default function Home() {
           )}
         </section>
 
-        {/* Submit form */}
         <section className={styles.section}>
           <h2>New Ticket</h2>
           <form onSubmit={handleSubmit} className={styles.form}>
@@ -310,7 +306,6 @@ export default function Home() {
           )}
         </section>
 
-        {/* Ticket list */}
         <section className={styles.section}>
           <h2>Tickets</h2>
           <div className={styles.filters}>
