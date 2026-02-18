@@ -1,101 +1,86 @@
-🎫 Support Ticket System
+# 🎫 Support Ticket System
 
-A modern, AI-assisted support ticket platform.
+A modern, AI-assisted support ticket platform.  
 Built for speed. Designed for resilience. Ready to ship.
 
 Spin up the entire stack — database, backend, and frontend — with one command.
 
-⚡ Run It
+## ⚡ Run It
+
+```bash
 docker-compose up --build
+```
 
+**Open:**
 
-Open:
+- **🌐 App** → http://localhost:3001
+- **🔧 API** → http://localhost:3000
 
-🌐 App → http://localhost:3001
+### Port 3001 busy?
 
-🔧 API → http://localhost:3000
-
-Port 3001 busy?
-
+```bash
 FRONTEND_PORT=3002 docker-compose up --build
+```
 
+Then open: http://localhost:3002
 
-Then open:
-
-http://localhost:3002
-
-
-No local Postgres.
-No manual migrations.
+No local Postgres.  
+No manual migrations.  
 No extra setup.
 
-🧠 AI-Powered (Optional)
+---
+
+## 🧠 AI-Powered (Optional)
 
 This system supports automatic ticket classification using OpenAI.
 
-Create a .env file in the root:
+Create a `.env` file in the root:
 
+```env
 OPENAI_API_KEY=sk-your-key
+```
 
+**If the key is missing?** No problem.
 
-If the key is missing?
-No problem.
-
-The system automatically falls back to a keyword-based classifier.
+The system automatically falls back to a keyword-based classifier.  
 Ticket creation never breaks.
 
-🤖 LLM Choice
+---
 
-Model: gpt-4o-mini
+## 🤖 LLM Choice
 
-Why this model?
+**Model:** `gpt-4o-mini`
 
-⚡ Fast inference for short prompts
+**Why this model?**
 
-💰 Cost-efficient for classification
-
-🎯 Reliable structured output
-
-🔁 Easy validation + safe fallback
+- ⚡ Fast inference for short prompts
+- 💰 Cost-efficient for classification
+- 🎯 Reliable structured output
+- 🔁 Easy validation + safe fallback
 
 The model returns exactly:
 
+```
 <category> <priority>
+```
 
+**Example:** `technical high`
 
-Example:
+**Allowed categories:** `billing` · `technical` · `account` · `general`
 
-technical high
-
-
-Allowed categories:
-
-billing
-
-technical
-
-account
-
-general
-
-Allowed priorities:
-
-low
-
-medium
-
-high
-
-critical
+**Allowed priorities:** `low` · `medium` · `high` · `critical`
 
 If the response is invalid → fallback kicks in automatically.
 
-Resilience > novelty.
+*Resilience > novelty.*
 
-🏗 Architecture
+---
+
+## 🏗 Architecture
 
 Built as a Turbo monorepo:
 
+```
 apps/
   backend/
   frontend/
@@ -103,131 +88,111 @@ apps/
 packages/
   db/
   ui/
+```
 
-Why this structure?
+**Why this structure?**
 
-Single clone
+- Single clone
+- Single command to run
+- Shared database layer
+- Clean separation of concerns
+- Easy scaling later
 
-Single command to run
+---
 
-Shared database layer
+## 🐘 Database
 
-Clean separation of concerns
+- PostgreSQL runs entirely in Docker
+- `DATABASE_URL` is injected via compose
+- Backend runs `prisma migrate deploy` on startup
+- Zero manual migration steps
 
-Easy scaling later
+---
 
-🐘 Database
-
-PostgreSQL runs entirely in Docker
-
-DATABASE_URL is injected via compose
-
-Backend runs prisma migrate deploy on startup
-
-Zero manual migration steps.
-
-⚡ Runtime: Bun
+## ⚡ Runtime: Bun
 
 Both backend and frontend use Bun inside Docker.
 
-Why?
+**Why?**
 
-Faster installs
+- Faster installs
+- Faster builds
+- Works cleanly with Prisma + Next.js
+- Leaner containers
 
-Faster builds
+---
 
-Works cleanly with Prisma + Next.js
-
-Leaner containers
-
-🎨 Frontend
+## 🎨 Frontend
 
 Built with Next.js.
 
-Includes:
+**Includes:**
 
-📝 Ticket creation form (debounced classification)
-
-📋 Ticket list
-
-🔍 Filters + search
-
-📊 Stats dashboard
+- 📝 Ticket creation form (debounced classification)
+- 📋 Ticket list
+- 🔍 Filters + search
+- 📊 Stats dashboard
 
 The frontend talks to the backend via:
 
+```env
 NEXT_PUBLIC_API_URL=http://localhost:3000
-
+```
 
 Configured at build time for clean host access.
 
-🌐 API Design
+---
+
+## 🌐 API Design
 
 Simple REST API:
 
-POST /tickets
+- `POST /tickets`
+- `GET /tickets`
+- `PATCH /tickets/:id`
+- `GET /stats`
 
-GET /tickets
+Stats are computed using Prisma: `count`, `groupBy`, `aggregate`.
 
-PATCH /tickets/:id
+No in-memory aggregation loops. Database does the heavy lifting.
 
-GET /stats
+---
 
-Stats are computed using Prisma:
-
-count
-
-groupBy
-
-aggregate
-
-No in-memory aggregation loops.
-Database does the heavy lifting.
-
-🛡 Built for Failure
+## 🛡 Built for Failure
 
 This system is designed to fail safely:
 
-LLM down? → fallback works
-
-Invalid AI output? → rejected + fallback
-
-Fresh environment? → migrations auto-run
-
-No local DB? → Docker handles it
+- **LLM down?** → fallback works
+- **Invalid AI output?** → rejected + fallback
+- **Fresh environment?** → migrations auto-run
+- **No local DB?** → Docker handles it
 
 The user flow never blocks.
 
-🧩 Tech Stack
+---
 
-Next.js (Frontend)
+## 🧩 Tech Stack
 
-Express (Backend)
+- **Next.js** (Frontend)
+- **Express** (Backend)
+- **PostgreSQL**
+- **Prisma**
+- **Bun**
+- **Docker + Docker Compose**
+- **OpenAI** (`gpt-4o-mini`)
 
-PostgreSQL
+---
 
-Prisma
-
-Bun
-
-Docker + Docker Compose
-
-OpenAI (gpt-4o-mini)
-
-🎯 Philosophy
+## 🎯 Philosophy
 
 This isn’t just a CRUD app.
 
 It demonstrates:
 
-Clean monorepo architecture
+- Clean monorepo architecture
+- Production-safe migrations
+- AI integration with guardrails
+- Fail-safe design
+- Single-command reproducibility
 
-Production-safe migrations
-
-AI integration with guardrails
-
-Fail-safe design
-
-Single-command reproducibility
-
-If you can run it with one command, you can ship it.
+*If you can run it with one command, you can ship it.*
