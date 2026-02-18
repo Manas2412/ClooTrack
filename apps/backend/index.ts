@@ -5,6 +5,7 @@ import OpenAI from "openai";
 const app = express();
 app.use(express.json());
 
+// API key from env only — never hardcode
 const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   : null;

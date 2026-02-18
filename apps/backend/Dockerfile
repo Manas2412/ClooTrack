@@ -8,8 +8,9 @@ COPY packages/db ./packages/db
 
 RUN bun install --frozen-lockfile && cd packages/db && bunx prisma generate
 
+RUN chmod +x /app/apps/backend/entrypoint.sh
+
 EXPOSE 3000
 ENV PORT=3000
-# OPENAI_API_KEY set via docker-compose or .env for LLM classification
-WORKDIR /app
-CMD ["bun", "run", "apps/backend/index.ts"]
+# OPENAI_API_KEY and DATABASE_URL set via docker-compose / .env
+ENTRYPOINT ["/app/apps/backend/entrypoint.sh"]

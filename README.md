@@ -1,3 +1,21 @@
+# Support Ticket System (Turborepo)
+
+## Docker — run the full app
+
+From the repo root:
+
+```bash
+docker-compose up --build
+```
+
+- **PostgreSQL** runs on port 5432; **backend** on 3000; **frontend** on 3001.
+- Open **http://localhost:3001** in your browser. The app is fully functional (submit tickets, list, filter, search, stats, change status).
+- **LLM suggestions**: Set `OPENAI_API_KEY` in a `.env` file (or `export OPENAI_API_KEY=sk-...`) before running. Optional: copy `.env.example` to `.env` and add your key. Without it, category/priority use a keyword fallback.
+
+The backend runs database migrations automatically on startup. Service order: postgres → backend (after DB healthy) → frontend.
+
+---
+
 # Turborepo starter
 
 This Turborepo starter is maintained by the Turborepo core team.

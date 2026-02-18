@@ -1,7 +1,23 @@
-# Support Ticket System — API key for LLM classification is configurable here.
-# Set OPENAI_API_KEY to enable auto-suggestions; leave empty/unset to use keyword fallback.
-# Ticket submission always works with or without the LLM.
+# Support Ticket System — run with: docker-compose up --build
+# Database: Docker PostgreSQL only (no host/external DB). Set OPENAI_API_KEY in .env for LLM (optional).
+
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: clootrack
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d clootrack"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
   backend:
     build:
       context: .
@@ -10,23 +26,24 @@ services:
       - "3000:3000"
     environment:
       - PORT=3000
-      # Set your LLM API key for auto-suggest category/priority. Optional.
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - DATABASE_URL=${DATABASE_URL}
-    env_file:
-      - .env
-    # Uncomment and add a postgres service if you run DB in Docker:
-    # depends_on:
-    #   - postgres
-  # postgres:
-  #   image: postgres:16-alpine
-  #   environment:
-  #     POSTGRES_USER: app
-  #     POSTGRES_PASSWORD: app
-  #     POSTGRES_DB: clootrack
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - pgdata:/var/lib/postgresql/data
-# volumes:
-#   pgdata:
+      # Use Docker Postgres only (do not override with host DATABASE_URL)
+      - DATABASE_URL=postgresql://app:app@postgres:5432/clootrack
+      # LLM API key from env only (set in .env or export OPENAI_API_KEY); never hardcode
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:3000
+    ports:
+      - "3001:3000"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
