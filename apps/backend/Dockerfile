@@ -6,7 +6,7 @@ COPY package.json bun.lock* turbo.json ./
 COPY apps/backend ./apps/backend
 COPY packages/db ./packages/db
 
-RUN bun install --frozen-lockfile && cd packages/db && bunx prisma generate
+RUN bun install && cd packages/db && bunx prisma generate
 
 RUN chmod +x /app/apps/backend/entrypoint.sh
 
